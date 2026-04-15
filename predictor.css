@@ -386,3 +386,143 @@ h2 {
   text-align: center;
   vertical-align: middle;
 }
+
+/* ================= MOBILE RESPONSIVE IMPROVEMENTS ================= */
+
+@media (max-width: 768px) {
+
+  /* HEADER STACK */
+  .header-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .main-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .main-nav a {
+    font-size: 0.9rem;
+    padding: 6px 8px;
+  }
+
+  #welcomeText {
+    font-size: 0.9rem;
+  }
+
+  /* PAGE BOX */
+  .page-box {
+    padding: 20px;
+  }
+
+  .page-box h2 {
+    font-size: 1.2rem;
+  }
+
+  /* SECTION CONTAINER */
+  .page-section {
+    margin: 15px;
+    padding: 0;
+  }
+
+  /* TABLE WRAPPER (IMPORTANT) */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* TABLE */
+  .leaderboard-table {
+    min-width: 600px; /* prevents squishing */
+    font-size: 0.85rem;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 10px 8px;
+  }
+}
+
+/* EXTRA SMALL PHONES */
+@media (max-width: 480px) {
+
+  .logo {
+    font-size: 1rem;
+  }
+
+  .main-nav a {
+    font-size: 0.8rem;
+  }
+
+  .leaderboard-table {
+    font-size: 0.8rem;
+  }
+
+}
+
+/* ================= ADMIN RESPONSIVE IMPROVEMENTS ================= */
+
+@media (max-width: 768px) {
+
+  /* ADMIN NAV BUTTONS */
+  .admin-nav {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 15px;
+  }
+
+  .admin-nav button {
+    flex: 1 1 45%;
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+
+  /* ADMIN SECTIONS */
+  .admin-section {
+    margin: 20px 15px;
+    padding: 20px;
+  }
+
+  /* CREATE USER BOX */
+  .admin-box {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .admin-box input {
+    width: 100%;
+  }
+
+  .admin-box button {
+    width: 100%;
+  }
+
+  /* USERS LIST CARDS */
+  .user-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+  }
+
+}
+
+/* EXTRA SMALL PHONES */
+@media (max-width: 480px) {
+
+  .admin-nav button {
+    flex: 1 1 100%;
+  }
+
+  .logo {
+    font-size: 1rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+}
