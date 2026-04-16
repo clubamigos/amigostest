@@ -64,6 +64,9 @@
 <section id="match" class="page-section hidden">
   <div class="page-box">
     <h2>Match Prediction</h2>
+
+    <div id="matchesContainer" class="matches-container"></div>
+
   </div>
 </section>
 
@@ -95,6 +98,21 @@
 
     <button class="primary-btn" onclick="verifyAdmin()">Enter</button>
     <button class="secondary-btn" onclick="closeAdminModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ================= PREDICTION VIEW MODAL ================= -->
+<div id="predictionModal" class="modal">
+  <div class="modal-content" style="max-width:600px; text-align:left;">
+
+    <h3 id="modalTitle">Match Predictions</h3>
+
+    <div id="predictionTable" style="margin-top:15px;"></div>
+
+    <button class="secondary-btn" onclick="closePredictionModal()">
+      Close
+    </button>
+
   </div>
 </div>
 

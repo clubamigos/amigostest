@@ -526,3 +526,182 @@ h2 {
   }
 
 }
+
+/* ================= FIFA MATCH GRID ================= */
+
+.matches-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+/* ================= MATCH CARD ================= */
+
+.match-card {
+  background: linear-gradient(135deg, #0a1f44, #102b63);
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 25px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  transition: 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.match-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 35px rgba(0,0,0,0.45);
+}
+
+/* ================= MATCH NUMBER ================= */
+
+.match-header {
+  font-size: 13px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-bottom: 15px;
+}
+
+/* ================= DATE & GROUP ================= */
+
+.match-info p {
+  margin: 4px 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* ================= TEAMS STYLE ================= */
+
+.match-info p:last-child {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 18px;
+  letter-spacing: 0.5px;
+}
+
+/* ================= PREDICTION SECTION ================= */
+
+.prediction-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+/* Score Inputs */
+
+.prediction-row input {
+  width: 60px;
+  height: 45px;
+  border-radius: 10px;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  background: #ffffff;
+  color: #0a1f44;
+  outline: none;
+}
+
+/* Save Button */
+
+.primary-btn {
+  background: #ffcc00;
+  color: #0a1f44;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #ffd633;
+}
+
+/* ================= LOCKED TEXT ================= */
+
+.match-card b {
+  color: #ffcc00;
+}
+
+/* ================= RESPONSIVE ================= */
+
+/* Tablet */
+@media (max-width: 992px) {
+  .matches-container {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+
+  .matches-container {
+    grid-template-columns: 1fr;
+  }
+
+  .match-card {
+    padding: 20px 15px;
+  }
+
+  .match-info p:last-child {
+    font-size: 18px;
+  }
+
+  .prediction-row input {
+    width: 55px;
+    height: 42px;
+    font-size: 16px;
+  }
+
+  .primary-btn {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+
+  .match-info p:last-child {
+    font-size: 16px;
+  }
+
+  .prediction-row input {
+    width: 50px;
+    height: 38px;
+    font-size: 15px;
+  }
+}
+
+/* ================= PREDICTION TABLE ================= */
+
+#predictionTable {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.pred-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pred-table th,
+.pred-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.pred-table th {
+  background: #111827;
+  color: white;
+}

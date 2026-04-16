@@ -61,8 +61,26 @@
 </section>
 
 <section id="matchSection" class="admin-section hidden">
+
   <h2>Match Prediction Management</h2>
-  <p>Coming soon...</p>
+
+  <!-- Create Match Box -->
+  <div class="admin-box">
+    <input type="number" id="matchNo" placeholder="Match No">
+    <input type="date" id="matchDate">
+    <input type="text" id="matchGroup" placeholder="Group">
+    <input type="text" id="teamA" placeholder="Team A">
+    <input type="text" id="teamB" placeholder="Team B">
+
+    <button class="primary-btn" onclick="createMatch()">Create Match</button>
+  </div>
+
+  <hr style="margin:40px 0;">
+
+  <h2>All Matches</h2>
+
+  <div id="matchesList" class="matches-list"></div>
+
 </section>
 
 <section id="bracketSection" class="admin-section hidden">
