@@ -504,7 +504,7 @@ function loadBracketUI() {
         <h3>Group ${group}</h3>
 
         <label>1st Place</label>
-        <select id="g_${group}_1">
+        <select id="g_${group}_1" onchange="validateGroupSelection('${group}')">
           <option value="">Select</option>
           ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
@@ -512,7 +512,7 @@ function loadBracketUI() {
         <br><br>
 
         <label>2nd Place</label>
-        <select id="g_${group}_2">
+        <select id="g_${group}_2" onchange="validateGroupSelection('${group}')">
           <option value="">Select</option>
           ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
@@ -611,6 +611,7 @@ function saveBracketPrediction() {
 
   let groupData = {};
   let allGroupsFilled = true;
+  let duplicateFound = false;
 
   Object.keys(GROUPS).forEach(group => {
 
@@ -621,6 +622,11 @@ function saveBracketPrediction() {
       allGroupsFilled = false;
     }
 
+    // 🔴 NEW CHECK — Same team in 1st & 2nd
+    if (first && second && first === second) {
+      duplicateFound = true;
+    }
+
     groupData[group] = {
       first: first,
       second: second
@@ -628,29 +634,51 @@ function saveBracketPrediction() {
 
   });
 
+  if (!allGroupsFilled) {
+    alert("Please select 1st and 2nd place for ALL groups.");
+    return;
+  }
+
+  // 🔴 BLOCK SAME TEAM SELECTION
+  if (duplicateFound) {
+    alert("1st and 2nd place cannot be the same team in any group.");
+    return;
+  }
+
   // Collect best 3rd
   let bestThird = [];
   document.querySelectorAll(".thirdCheck:checked").forEach(cb => {
     bestThird.push(cb.value);
   });
 
-  // 🔴 VALIDATION CHECK
-  if (!allGroupsFilled) {
-    alert("Please select 1st and 2nd place for ALL groups.");
-    return;
-  }
-
   if (bestThird.length !== 8) {
     alert("Please select exactly 8 Best 3rd teams.");
     return;
   }
 
-  // ✅ If all good → Save
+  // ✅ Save
   database.ref("bracket/groups/" + uid).set(groupData);
   database.ref("bracket/bestThird/" + uid).set({
     selected: bestThird
   }).then(() => {
     alert("Bracket saved successfully!");
   });
+
+}
+
+function validateGroupSelection(group) {
+
+  const firstSelect = document.getElementById(`g_${group}_1`);
+  const secondSelect = document.getElementById(`g_${group}_2`);
+
+  const first = firstSelect.value;
+  const second = secondSelect.value;
+
+  if (first && second && first === second) {
+    alert("1st and 2nd place cannot be the same team.");
+
+    // Reset the one that was just changed
+    event.target.value = "";
+  }
 
 }
