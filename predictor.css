@@ -705,3 +705,295 @@ h2 {
   background: #111827;
   color: white;
 }
+
+/* ===== Prediction Table Responsive Fix ===== */
+
+.pred-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px; /* prevents squishing */
+}
+
+.pred-table th,
+.pred-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+#predictionTable {
+  overflow-x: auto;
+}
+
+/* Final score box styling */
+.final-score-box {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f4f6f9;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: bold;
+}
+
+@media (max-width: 480px) {
+  .pred-table th,
+  .pred-table td {
+    padding: 6px;
+    font-size: 13px;
+  }
+}
+
+/* ================= BRACKET STAGE UI ================= */
+
+#bracketContainer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* GROUP CARD */
+.bracket-group {
+  background: #111827;
+  color: #ffffff;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  text-align: left;
+}
+
+/* GROUP TITLE */
+.bracket-group h3 {
+  margin: 0 0 12px 0;
+  color: #fbbf24;
+  font-size: 1.1rem;
+}
+
+/* LABELS */
+.bracket-group label {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+}
+
+/* DROPDOWNS FIX (IMPORTANT) */
+.bracket-group select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #ffffff;   /* FIX WHITE VISIBILITY */
+  color: #111827;        /* FIX TEXT VISIBILITY */
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.bracket-group select:focus {
+  border-color: #fbbf24;
+}
+
+/* ================= BEST 3RD SECTION ================= */
+
+#thirdContainer {
+  margin-top: 15px;
+}
+
+/* TEAM CHECKBOX CARDS */
+.third-team {
+  background: #ffffff;   /* FIXED (was invisible issue) */
+  color: #111827;        /* FIXED text visibility */
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.third-team:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+}
+
+/* CHECKBOX SIZE */
+.third-team input {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* COUNTER TEXT */
+#thirdCount {
+  margin-top: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* SAVE BUTTON FIX */
+#bracket button.primary-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+}
+
+/* ================= GROUP CARD MODERN UI ================= */
+
+.group-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* TEAM ROW */
+.team-row {
+  background: #ffffff;
+  color: #111827;
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.team-row:hover {
+  transform: translateY(-2px);
+  background: #f9fafb;
+}
+
+/* TEAM NAME */
+.team-name {
+  font-weight: 600;
+}
+
+/* BUTTONS */
+.team-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.mini-btn {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.first-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.second-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+/* SELECTION PREVIEW */
+.selection-preview {
+  margin-top: 10px;
+  color: #e5e7eb;
+}
+
+/* ================= CLEAN GROUP UI ================= */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* TEAM BUTTON STYLE */
+.team-pill {
+  background: #ffffff;
+  color: #111827;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  transition: 0.2s ease;
+}
+
+.team-pill:hover {
+  transform: translateY(-2px);
+  background: #f3f4f6;
+}
+
+/* SELECTED STATES */
+.team-pill.first {
+  background: #2563eb;
+  color: white;
+}
+
+.team-pill.second {
+  background: #f59e0b;
+  color: white;
+}
+
+/* GROUP CARD */
+.bracket-group {
+  background: #111827;
+  color: white;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.selection-preview {
+  margin-top: 10px;
+  color: #e5e7eb;
+}
+
+#bracketContainer > div {
+  background: #111827;
+  color: white;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+#bracketContainer select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#bracketContainer select:hover {
+  border-color: #fbbf24;
+}
+
+#bracketContainer select:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.2);
+}
+
+#bracketContainer label {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  font-weight: 500;
+}

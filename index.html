@@ -14,9 +14,9 @@
 
     <!-- NAVIGATION (ALWAYS FREE ACCESS) -->
     <nav id="mainNav" class="main-nav">
-  <a href="#leaderboard" onclick="navigate('leaderboard')">Leaderboard</a>
-  <a href="#match" onclick="navigate('match')">Match Prediction</a>
-  <a href="#bracket" onclick="navigate('bracket')">Bracket Prediction</a>
+  <a href="javascript:void(0)" onclick="navigate('leaderboard')">Leaderboard</a>
+<a href="javascript:void(0)" onclick="navigate('match')">Match Prediction</a>
+<a href="javascript:void(0)" onclick="navigate('bracket')">Bracket Prediction</a>
 </nav>
 
     <div id="guestView" class="auth-area">
@@ -72,7 +72,18 @@
 
 <section id="bracket" class="page-section hidden">
   <div class="page-box">
-    <h2>Bracket Prediction</h2>
+    <h2>Bracket Prediction (Group Stage)</h2>
+
+    <p style="margin-top:10px;">
+      Select Group 1st, 2nd and Best 3rd (8 teams)
+    </p>
+
+    <div id="bracketContainer"></div>
+
+    <button class="primary-btn" style="margin-top:20px;" onclick="saveBracketPrediction()">
+      Save Bracket
+    </button>
+
   </div>
 </section>
 
