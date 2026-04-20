@@ -1,13 +1,35 @@
 const database = firebase.database();
 
+const GROUPS = {
+  A: ["Mexico", "South Africa", "South Korea", "Czech Republic"],
+  B: ["Canada", "Bosnia & Herzegovina", "Qatar", "Switzerland"],
+  C: ["Brazil", "Morocco", "Haiti", "Scotland"],
+  D: ["United States", "Paraguay", "Australia", "Turkey"],
+  E: ["Germany", "Curaçao", "Ivory Coast", "Ecuador"],
+  F: ["Netherlands", "Japan", "Sweden", "Tunisia"],
+  G: ["Belgium", "Egypt", "Iran", "New Zealand"],
+  H: ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+  I: ["France", "Senegal", "Iraq", "Norway"],
+  J: ["Argentina", "Algeria", "Austria", "Jordan"],
+  K: ["Portugal", "DR Congo", "Uzbekistan", "Colombia"],
+  L: ["England", "Croatia", "Ghana", "Panama"]
+};
+
 /* ================= SECTION SWITCHING ================= */
 
 function showSection(sectionId) {
-  const sections = document.querySelectorAll(".admin-section");
-  sections.forEach(section => {
-    section.classList.add("hidden");
+
+  document.querySelectorAll(".admin-section").forEach(sec => {
+    sec.classList.add("hidden");
   });
+
   document.getElementById(sectionId).classList.remove("hidden");
+
+  // 🔥 LOAD BRACKET WHEN OPENED
+  if (sectionId === "bracketSection") {
+    loadBracketAdmin();
+  }
+
 }
 
 /* ================= CREATE USER ================= */
@@ -344,6 +366,543 @@ function recalculateUserTotals(userId) {
     });
 }
 
-/* ================= INIT MATCHES ================= */
+/* ================= BRACKET LOCK MANAGEMENT ================= */
 
-loadMatches();
+function listenBracketLockStatus() {
+
+  database.ref("bracketResults/lock/bracket")
+    .on("value", snapshot => {
+
+      const val = snapshot.val();
+      const isLocked = val === true;
+
+      const statusText = document.getElementById("bracketLockStatus");
+      const btn = document.getElementById("toggleBracketLockBtn");
+
+      if (!statusText || !btn) return;
+
+      if (isLocked) {
+        statusText.innerText = "🔴 Locked";
+        btn.innerText = "Unlock Bracket";
+      } else {
+        statusText.innerText = "🟢 Open";
+        btn.innerText = "Lock Bracket";
+      }
+    });
+}
+
+function toggleBracketLock() {
+
+  database.ref("bracketResults/lock/bracket")
+    .once("value")
+    .then(snapshot => {
+
+      const current = snapshot.val() === true;
+
+      database.ref("bracketResults/lock")
+        .update({
+          bracket: !current
+        });
+
+    });
+}
+
+function loadBracketAdmin() {
+
+  const container = document.getElementById("bracketAdminContainer");
+
+  let html = "";
+
+  Object.keys(GROUPS).forEach(group => {
+
+    html += `
+      <div class="admin-box" style="margin-top:15px;">
+        <h3>Group ${group}</h3>
+
+        <label>1st Place</label>
+        <select id="admin_${group}_1">
+          <option value="">Select</option>
+          ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
+        </select>
+
+        <br><br>
+
+        <label>2nd Place</label>
+        <select id="admin_${group}_2">
+          <option value="">Select</option>
+          ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
+        </select>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+listenGroupLocks();
+renderBestThirdAdmin();
+setupAdminGroupValidation();
+}
+
+function submitBracketResults() {
+
+  let results = {};
+
+  Object.keys(GROUPS).forEach(group => {
+
+    const first = document.getElementById(`admin_${group}_1`).value;
+    const second = document.getElementById(`admin_${group}_2`).value;
+
+    if (!first || !second) {
+      alert("Fill all groups first");
+      return;
+    }
+
+    results[group] = {
+      first,
+      second
+    };
+  });
+
+  database.ref("bracketResults/groups").set(results)
+    .then(() => {
+      alert("Bracket results saved!");
+      calculateBracketPoints();
+    });
+}
+
+function calculateBracketPoints() {
+
+  database.ref("bracket/groups").once("value").then(resultSnap => {
+
+    if (!resultSnap.exists()) return;
+
+    const actual = resultSnap.val();
+
+    database.ref("bracket/groups").once("value").then(() => {
+
+      database.ref("bracket/groups").once("value").then(() => {
+
+        database.ref("bracket/groups").once("value").then(() => {
+
+          // USERS
+          database.ref("bracket/groups").once("value"); // ignore
+
+        });
+
+      });
+
+    });
+
+    // GET ALL USERS
+    database.ref("bracket/groups").once("value"); // placeholder
+
+    database.ref("users").once("value").then(usersSnap => {
+
+      usersSnap.forEach(userChild => {
+
+        const uid = userChild.key;
+        const user = userChild.val();
+
+        database.ref("bracket/groups/" + uid).once("value").then(userBracketSnap => {
+
+          if (!userBracketSnap.exists()) return;
+
+          const userBracket = userBracketSnap.val();
+
+          let points = 0;
+
+          Object.keys(actual).forEach(group => {
+
+            const actualGroup = actual[group];
+            const userGroup = userBracket[group];
+
+            if (!userGroup) return;
+
+            if (userGroup.first === actualGroup.first) {
+              points += 5;
+            }
+
+            if (userGroup.second === actualGroup.second) {
+              points += 5;
+            }
+
+          });
+
+          database.ref("users/" + uid + "/points/bracket").set(points)
+            .then(() => {
+
+              recalcTotal(uid);
+
+            });
+
+        });
+
+      });
+
+    });
+
+  });
+}
+
+function recalcTotal(uid) {
+
+  database.ref("users/" + uid).once("value").then(snap => {
+
+    const user = snap.val();
+
+    const match = user.points?.match || 0;
+    const bracket = user.points?.bracket || 0;
+
+    database.ref("users/" + uid + "/points/total").set(match + bracket);
+  });
+}
+
+function listenGroupLocks() {
+
+  Object.keys(GROUPS).forEach(group => {
+
+    database.ref("bracketResults/lock/groups/" + group)
+      .on("value", snap => {
+
+        const locked = snap.val() === true;
+
+        const status = document.getElementById("status_" + group);
+        const btn = document.getElementById("lockBtn_" + group);
+
+        if (!status || !btn) return;
+
+        if (locked) {
+          status.innerText = "🔴 Locked (Users)";
+          btn.innerText = "Unlock";
+        } else {
+          status.innerText = "🟢 Open (Users)";
+          btn.innerText = "Lock";
+        }
+
+      });
+
+  });
+}
+
+function submitSingleGroup(group) {
+
+  const first = document.getElementById(`admin_${group}_1`).value;
+  const second = document.getElementById(`admin_${group}_2`).value;
+
+  if (!first || !second) {
+    alert("Select both teams");
+    return;
+  }
+
+  if (first === second) {
+    alert("1st and 2nd cannot be same team");
+    return;
+  }
+
+  // SAVE ONLY RESULT (NO LOCK HERE)
+  database.ref("bracketResults/groups/" + group).set({
+    first,
+    second
+  }).then(() => {
+
+    calculateGroupPoints(group);
+    alert("Group " + group + " result submitted!");
+
+  });
+}
+
+function toggleGroupLock(group) {
+
+  const lockRef = database.ref("bracketResults/lock/groups/" + group);
+
+  lockRef.once("value").then(snap => {
+
+    const isLocked = snap.val() === true;
+
+    lockRef.set(!isLocked);
+
+  });
+}
+
+function calculateGroupPoints(group) {
+
+  database.ref("bracketResults/groups/" + group).once("value")
+    .then(actualSnap => {
+
+      const actual = actualSnap.val();
+      if (!actual) return;
+
+      database.ref("users").once("value")
+        .then(usersSnap => {
+
+          usersSnap.forEach(userChild => {
+
+            const uid = userChild.key;
+
+            database.ref(`bracket/groups/${uid}/${group}`)
+              .once("value")
+              .then(userSnap => {
+
+                const user = userSnap.val();
+                if (!user) return;
+
+                let points = 0;
+
+                if (user.first === actual.first) points += 5;
+                if (user.second === actual.second) points += 5;
+
+                database.ref(`users/${uid}/bracketPoints/${group}`)
+                  .set(points)
+                  .then(() => recalcBracketTotal(uid));
+              });
+          });
+        });
+    });
+}
+
+function renderBestThirdAdmin() {
+
+  const container = document.getElementById("bracketAdminContainer");
+
+  let html = `
+    <div class="admin-box" style="margin-top:30px;">
+      <h3>Best 3rd Teams (Select 8)</h3>
+
+      <div id="adminBestThirdContainer"
+           style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;">
+  `;
+
+  Object.keys(GROUPS).forEach(group => {
+    GROUPS[group].forEach(team => {
+      html += `
+        <div>
+          <input type="checkbox" value="${team}" class="adminThirdCheck">
+          <span>${team}</span>
+        </div>
+      `;
+    });
+  });
+
+  html += `
+      </div>
+
+      <p id="adminThirdCount">Selected: 0 / 8</p>
+
+      <br>
+
+      <button class="primary-btn"
+        onclick="submitBestThirdActual()">
+        Submit Best 3rd Result
+      </button>
+
+      <button class="secondary-btn"
+        onclick="toggleBestThirdLock()"
+        id="bestThirdLockBtn"
+        style="margin-left:10px;">
+        Lock
+      </button>
+
+      <p id="bestThirdStatus" style="margin-top:10px;"></p>
+    </div>
+  `;
+
+  container.innerHTML += html;
+
+  setupAdminThirdLimit();
+  listenBestThirdLock();
+}
+
+function setupAdminThirdLimit() {
+
+  document.querySelectorAll(".adminThirdCheck").forEach(cb => {
+
+    cb.addEventListener("change", () => {
+
+      const checked = document.querySelectorAll(".adminThirdCheck:checked");
+
+      if (checked.length > 8) {
+        cb.checked = false;
+        alert("Only 8 teams allowed");
+      }
+
+      document.getElementById("adminThirdCount").innerText =
+        `Selected: ${checked.length} / 8`;
+    });
+
+  });
+
+}
+
+function submitBestThirdActual() {
+
+  const checked = document.querySelectorAll(".adminThirdCheck:checked");
+
+  if (checked.length !== 8) {
+    alert("Select exactly 8 teams");
+    return;
+  }
+
+  let actualTeams = [];
+  checked.forEach(cb => actualTeams.push(cb.value));
+
+  database.ref("bracketResults/bestThird/actual")
+    .set(actualTeams)
+    .then(() => {
+
+      calculateBestThirdPoints(actualTeams);
+      alert("Best 3rd teams submitted!");
+
+    });
+}
+
+function calculateBestThirdPoints(actualTeams) {
+
+  database.ref("users").once("value").then(usersSnap => {
+
+    usersSnap.forEach(userChild => {
+
+      const uid = userChild.key;
+
+      database.ref("bracket/bestThird/" + uid)
+        .once("value")
+        .then(userSnap => {
+
+          if (!userSnap.exists()) return;
+
+          const userSelected = userSnap.val().selected || [];
+
+          let points = 0;
+
+          userSelected.forEach(team => {
+            if (actualTeams.includes(team)) {
+              points += 5;
+            }
+          });
+
+          database.ref(`users/${uid}/bracketPoints/bestThird`)
+            .set(points)
+            .then(() => recalcBracketTotal(uid));
+
+        });
+
+    });
+
+  });
+}
+
+function toggleBestThirdLock() {
+
+  const lockRef = database.ref("bracketResults/lock/bestThird");
+
+  lockRef.once("value").then(snap => {
+
+    const isLocked = snap.val() === true;
+
+    lockRef.set(!isLocked);
+
+  });
+}
+
+function listenBestThirdLock() {
+
+  database.ref("bracketResults/lock/bestThird")
+    .on("value", snap => {
+
+      const locked = snap.val() === true;
+
+      const status = document.getElementById("bestThirdStatus");
+      const btn = document.getElementById("bestThirdLockBtn");
+
+      if (!status || !btn) return;
+
+      if (locked) {
+        status.innerText = "🔴 Locked (Users)";
+        btn.innerText = "Unlock";
+      } else {
+        status.innerText = "🟢 Open (Users)";
+        btn.innerText = "Lock";
+      }
+
+    });
+}
+
+function recalcBracketTotal(uid) {
+
+  database.ref(`users/${uid}/bracketPoints`)
+    .once("value")
+    .then(snap => {
+
+      let total = 0;
+
+      snap.forEach(child => {
+        total += child.val();
+      });
+
+      database.ref(`users/${uid}/points/bracket`)
+        .set(total)
+        .then(() => recalcTotal(uid));
+    });
+}
+
+window.onload = function () {
+  loadUsers();
+  loadMatches();
+  loadBracketAdmin();
+  listenBracketLockStatus();
+};
+
+function setupAdminGroupValidation() {
+
+  Object.keys(GROUPS).forEach(group => {
+
+    const firstSelect = document.getElementById(`admin_${group}_1`);
+    const secondSelect = document.getElementById(`admin_${group}_2`);
+
+    if (!firstSelect || !secondSelect) return;
+
+    function validateGroup() {
+
+      const first = firstSelect.value;
+      const second = secondSelect.value;
+
+      // Prevent same team
+      if (first && second && first === second) {
+        alert("1st and 2nd cannot be same team");
+        secondSelect.value = "";
+      }
+
+      updateBestThirdAvailability();
+    }
+
+    firstSelect.addEventListener("change", validateGroup);
+    secondSelect.addEventListener("change", validateGroup);
+
+  });
+}
+
+function updateBestThirdAvailability() {
+
+  let selectedTeams = [];
+
+  // Collect all selected 1st & 2nd teams
+  Object.keys(GROUPS).forEach(group => {
+
+    const first = document.getElementById(`admin_${group}_1`)?.value;
+    const second = document.getElementById(`admin_${group}_2`)?.value;
+
+    if (first) selectedTeams.push(first);
+    if (second) selectedTeams.push(second);
+  });
+
+  // Disable those in Best 3rd
+  document.querySelectorAll(".adminThirdCheck").forEach(cb => {
+
+    if (selectedTeams.includes(cb.value)) {
+      cb.checked = false;
+      cb.disabled = true;
+    } else {
+      cb.disabled = false;
+    }
+
+  });
+}

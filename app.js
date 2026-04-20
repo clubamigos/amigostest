@@ -1,5 +1,5 @@
 const database = firebase.database();
-const ADMIN_PASSWORD = "club2026";
+const ADMIN_PASSWORD = "123";
 
 const GROUPS = {
   A: ["Mexico", "South Africa", "South Korea", "Czech Republic"],
@@ -504,7 +504,7 @@ function loadBracketUI() {
         <h3>Group ${group}</h3>
 
         <label>1st Place</label>
-        <select id="g_${group}_1" onchange="validateGroupSelection('${group}')">
+        <select id="g_${group}_1" onchange="if(!requireLogin()) { this.value=''; return; } validateGroupSelection('${group}')">
           <option value="">Select</option>
           ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
@@ -512,7 +512,7 @@ function loadBracketUI() {
         <br><br>
 
         <label>2nd Place</label>
-        <select id="g_${group}_2" onchange="validateGroupSelection('${group}')">
+        <select id="g_${group}_2" onchange="if(!requireLogin()) { this.value=''; return; } validateGroupSelection('${group}')">
           <option value="">Select</option>
           ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
@@ -589,16 +589,34 @@ if (uid) {
 
   // LIMIT BEST 3RD TO 8
   document.querySelectorAll(".thirdCheck").forEach(cb => {
-    cb.addEventListener("change", () => {
-      const checked = document.querySelectorAll(".thirdCheck:checked");
-      if (checked.length > 8) {
-        cb.checked = false;
-        alert("Only 8 teams allowed");
-      }
-      document.getElementById("thirdCount").innerText =
-        `Selected: ${checked.length} / 8`;
-    });
+
+  cb.addEventListener("click", (e) => {
+
+    if (!requireLogin()) {
+      e.preventDefault();
+      cb.checked = false;
+      return;
+    }
+
   });
+
+  cb.addEventListener("change", () => {
+
+    const checked = document.querySelectorAll(".thirdCheck:checked");
+    if (checked.length > 8) {
+      cb.checked = false;
+      alert("Only 8 teams allowed");
+    }
+
+    document.getElementById("thirdCount").innerText =
+      `Selected: ${checked.length} / 8`;
+
+  });
+
+});
+  updateThirdAvailability();
+  listenGroupLocksForUser();
+  listenBestThirdLockForUser();
 }
 
 function saveBracketPrediction() {
@@ -676,9 +694,93 @@ function validateGroupSelection(group) {
 
   if (first && second && first === second) {
     alert("1st and 2nd place cannot be the same team.");
-
-    // Reset the one that was just changed
     event.target.value = "";
+    return;
   }
 
+  // 🔥 NEW — Update third team availability
+  updateThirdAvailability();
+}
+
+function updateThirdAvailability() {
+
+  let selectedTeams = [];
+
+  // Collect all selected 1st and 2nd teams
+  Object.keys(GROUPS).forEach(group => {
+
+    const first = document.getElementById(`g_${group}_1`).value;
+    const second = document.getElementById(`g_${group}_2`).value;
+
+    if (first) selectedTeams.push(first);
+    if (second) selectedTeams.push(second);
+
+  });
+
+  // Loop all third checkboxes
+  document.querySelectorAll(".thirdCheck").forEach(cb => {
+
+    if (selectedTeams.includes(cb.value)) {
+      cb.checked = false;
+      cb.disabled = true;
+      cb.parentElement.style.opacity = "0.5";
+    } else {
+      cb.disabled = false;
+      cb.parentElement.style.opacity = "1";
+    }
+
+  });
+
+  // Update counter
+  const checked = document.querySelectorAll(".thirdCheck:checked");
+  document.getElementById("thirdCount").innerText =
+    `Selected: ${checked.length} / 8`;
+}
+
+function requireLogin() {
+
+  const uid = localStorage.getItem("uid");
+
+  if (!uid) {
+    alert("Please login to continue.");
+    return false;
+  }
+
+  return true;
+}
+
+function listenGroupLocksForUser() {
+
+  Object.keys(GROUPS).forEach(group => {
+
+    database.ref("bracketResults/lock/groups/" + group)
+      .on("value", snap => {
+
+        const locked = snap.val() === true;
+
+        const select1 = document.getElementById(`g_${group}_1`);
+        const select2 = document.getElementById(`g_${group}_2`);
+
+        if (!select1 || !select2) return;
+
+        select1.disabled = locked;
+        select2.disabled = locked;
+
+      });
+
+  });
+}
+
+function listenBestThirdLockForUser() {
+
+  database.ref("bracketResults/lock/bestThird")
+    .on("value", snap => {
+
+      const locked = snap.val() === true;
+
+      document.querySelectorAll(".thirdCheck").forEach(cb => {
+        cb.disabled = locked;
+      });
+
+    });
 }
