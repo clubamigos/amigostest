@@ -417,6 +417,7 @@ function loadBracketAdmin() {
 
     html += `
       <div class="admin-box" style="margin-top:15px;">
+
         <h3>Group ${group}</h3>
 
         <label>1st Place</label>
@@ -432,15 +433,32 @@ function loadBracketAdmin() {
           <option value="">Select</option>
           ${GROUPS[group].map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
+
+        <br><br>
+
+        <button class="primary-btn"
+          onclick="submitSingleGroup('${group}')">
+          Submit Result
+        </button>
+
+        <button class="secondary-btn"
+          onclick="toggleGroupLock('${group}')"
+          id="lockBtn_${group}"
+          style="margin-left:10px;">
+          Lock
+        </button>
+
+        <p id="status_${group}" style="margin-top:10px;"></p>
+
       </div>
     `;
   });
 
   container.innerHTML = html;
 
-listenGroupLocks();
-renderBestThirdAdmin();
-setupAdminGroupValidation();
+  listenGroupLocks();
+  renderBestThirdAdmin();
+  setupAdminGroupValidation();
 }
 
 function submitBracketResults() {
