@@ -80,13 +80,6 @@
 
     <div id="bracketContainer"></div>
 
-    <button id="saveBracketBtn"
-        class="primary-btn"
-        style="margin-top:20px;"
-        onclick="saveBracketPrediction()">
-  Save Bracket
-</button>
-
   </div>
 </section>
 
@@ -124,6 +117,21 @@
     <div id="predictionTable" style="margin-top:15px;"></div>
 
     <button class="secondary-btn" onclick="closePredictionModal()">
+      Close
+    </button>
+
+  </div>
+</div>
+
+<!-- GROUP PREDICTIONS MODAL -->
+<div id="groupPredictionModal" class="modal">
+  <div class="modal-content" style="max-width:90vw; max-height:80vh; overflow:auto; text-align:left;">
+
+    <h3>Group Stage Predictions</h3>
+
+    <div id="groupPredictionTable" style="margin-top:15px;"></div>
+
+    <button class="secondary-btn" onclick="closeGroupPredictions()">
       Close
     </button>
 

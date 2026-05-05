@@ -99,7 +99,16 @@ function showUser(username) {
   document.getElementById("welcomeText").innerText = "Welcome, " + username;
 
   closeModal();
+
+  // 🔥 Reload everything properly
   loadMatchesForUsers();
+  loadLeaderboard();
+
+  // 🔥 IMPORTANT: Re-render current page content
+  const activePage = document.querySelector(".page-section:not(.hidden)");
+  if (activePage) {
+    navigate(activePage.id);
+  }
 }
 
 /* ================= LOGOUT ================= */
@@ -230,7 +239,7 @@ function loadMatchesForUsers() {
 
   const uid = localStorage.getItem("uid");
 
-  database.ref("matches").on("value", (snapshot) => {
+  database.ref("matches").once("value").then((snapshot) => {
 
     const container = document.getElementById("matchesContainer");
     container.innerHTML = "";
@@ -545,7 +554,54 @@ html += `
   </div>
 `;
 
+// ✅ BUTTONS HERE (CORRECT POSITION)
+html += `
+  <div style="margin-top:20px;">
+    <button id="saveBracketBtn"
+      class="primary-btn"
+      onclick="saveBracketPrediction()">
+      Save Bracket
+    </button>
+
+    <br><br>
+
+    <button id="viewGroupPredBtn"
+      class="secondary-btn"
+      style="display:none;"
+      onclick="viewGroupPredictions()">
+      View Group Predictions
+    </button>
+  </div>
+`;
+
+// 🔽 ADD KNOCKOUT SECTION (LOGIN REQUIRED)
+if (uid) {
+
+  html += `
+    <div style="margin-top:40px;">
+      <h2>Knockout Stage Prediction</h2>
+      <div id="knockoutContainer"></div>
+    </div>
+  `;
+
+} else {
+
+  html += `
+    <div style="margin-top:40px; text-align:center; color:white;">
+      <h2>Knockout Stage Prediction</h2>
+      <p style="margin-top:10px; opacity:0.7;">
+        Login to view knockout stage predictions
+      </p>
+    </div>
+  `;
+
+}
+
   container.innerHTML = html;
+
+  if (uid) {
+  renderR32User();
+}
 
   // LOAD SAVED DATA IF EXISTS
 if (uid) {
@@ -564,6 +620,8 @@ if (uid) {
         }
       });
     }
+    updateThirdAvailability();
+    applyLocksManually();
 
   });
 
@@ -582,6 +640,8 @@ if (uid) {
       document.getElementById("thirdCount").innerText =
         `Selected: ${savedThird.length} / 8`;
     }
+    updateThirdAvailability();
+    applyLocksManually();
 
   });
 
@@ -617,6 +677,8 @@ if (uid) {
   updateThirdAvailability();
   listenGroupLocksForUser();
   listenBestThirdLockForUser();
+  checkGroupPredictionExists();
+  listenKnockoutLockUser();
 }
 
 function saveBracketPrediction() {
@@ -694,11 +756,13 @@ function validateGroupSelection(group) {
 
   if (first && second && first === second) {
     alert("1st and 2nd place cannot be the same team.");
-    event.target.value = "";
+
+    // 🔥 FIX: Reset second dropdown safely
+    secondSelect.value = "";
     return;
   }
 
-  // 🔥 NEW — Update third team availability
+  // 🔥 Update third team availability
   updateThirdAvailability();
 }
 
@@ -784,3 +848,823 @@ function listenBestThirdLockForUser() {
 
     });
 }
+
+function applyLocksManually() {
+
+  // GROUP LOCKS
+  Object.keys(GROUPS).forEach(group => {
+
+    database.ref("bracketResults/lock/groups/" + group)
+      .once("value")
+      .then(snap => {
+
+        const locked = snap.val() === true;
+
+        const select1 = document.getElementById(`g_${group}_1`);
+        const select2 = document.getElementById(`g_${group}_2`);
+
+        if (select1 && select2) {
+          select1.disabled = locked;
+          select2.disabled = locked;
+        }
+
+      });
+
+  });
+
+  // BEST 3RD LOCK
+  database.ref("bracketResults/lock/bestThird")
+    .once("value")
+    .then(snap => {
+
+      const locked = snap.val() === true;
+
+      document.querySelectorAll(".thirdCheck").forEach(cb => {
+        cb.disabled = locked;
+      });
+
+    });
+
+}
+
+function checkGroupPredictionExists() {
+
+  const btn = document.getElementById("viewGroupPredBtn");
+  if (!btn) return;
+
+  database.ref("bracketResults/groups").once("value")
+    .then(groupSnap => {
+
+      const groupDataExists = groupSnap.exists();
+
+      database.ref("bracketResults/bestThird/actual").once("value")
+        .then(thirdSnap => {
+
+          const thirdExists = thirdSnap.exists();
+
+          if (groupDataExists || thirdExists) {
+            btn.style.display = "block";
+          } else {
+            btn.style.display = "none";
+          }
+
+        });
+
+    });
+}
+
+function viewGroupPredictions() {
+
+  const container = document.getElementById("groupPredictionTable");
+  container.innerHTML = "Loading...";
+
+  Promise.all([
+    database.ref("users").once("value"),
+    database.ref("bracket/groups").once("value"),
+    database.ref("bracket/bestThird").once("value")
+  ]).then(([usersSnap, groupSnap, thirdSnap]) => {
+
+    const users = usersSnap.val() || {};
+    const groups = groupSnap.val() || {};
+    const bestThird = thirdSnap.val() || {};
+
+    console.log("USERS:", users);
+console.log("GROUPS:", groups);
+console.log("BEST THIRD:", bestThird);
+
+    let html = `
+      <div style="overflow-x:auto;">
+      <table style="width:max-content; border-collapse:collapse; color:black; text-align:center;">
+        <thead>
+          <tr>
+            <th style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">User</th>
+    `;
+
+    // HEADERS
+    Object.keys(GROUPS).forEach(g => {
+      html += `
+        <th style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">${g} 1st</th>
+        <th style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">${g} 2nd</th>
+      `;
+    });
+
+    html += `
+        <th style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">Best 3rd (8)</th>
+      </tr>
+      </thead>
+      <tbody>
+    `;
+
+    // LOOP USERS
+    Object.keys(users).forEach(uid => {
+
+      const user = users[uid];
+
+      const groupData = groups[uid] || {};
+      const thirdData = bestThird[uid]?.selected || [];
+
+      html += `<tr>`;
+
+      // USER
+      html += `<td style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">
+        ${user.username}
+      </td>`;
+
+      // GROUPS
+      Object.keys(GROUPS).forEach(g => {
+
+        const data = groupData[g] || {};
+
+        html += `
+          <td style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">
+            ${data.first ? data.first : "-"}
+          </td>
+          <td style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">
+            ${data.second ? data.second : "-"}
+          </td>
+        `;
+      });
+
+      // BEST 3RD
+      html += `
+        <td style="padding:10px; border:1px solid #ccc; color:black; text-align:center;">
+          ${thirdData.length > 0 ? thirdData.join(", ") : "-"}
+        </td>
+      `;
+
+      html += `</tr>`;
+    });
+
+    html += `
+      </tbody>
+      </table>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    document.getElementById("groupPredictionModal").style.display = "block";
+
+  });
+}
+
+function closeGroupPredictions() {
+  document.getElementById("groupPredictionModal").style.display = "none";
+}
+
+function renderR32User() {
+
+  const container = document.getElementById("knockoutContainer");
+  const uid = localStorage.getItem("uid");
+
+  if (!uid) {
+  container.innerHTML = "<p><i>Login to view knockout stage predictions</i></p>";
+  return;
+}
+
+  if (!container) return;
+
+  database.ref("bracketResults/r32").on("value", snap => {
+
+    const matches = snap.val() || {};
+
+    if (!Object.keys(matches).length) {
+      container.innerHTML = "<p>Waiting for R32 matches...</p>";
+      return;
+    }
+
+    let html = `
+      <div style="margin-top:20px;">
+        <h3>Round of 32</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:15px;">
+    `;
+
+    Object.keys(matches).forEach(matchNo => {
+
+      const match = matches[matchNo];
+      const teamA = match.teamA;
+      const teamB = match.teamB;
+
+      html += `
+        <div class="admin-box">
+          <strong>Match ${matchNo}</strong><br><br>
+
+          ${teamA} vs ${teamB}
+
+          <br><br>
+
+          <select class="knockout-select" id="user_r32_${matchNo}">
+            <option value="">Select Winner</option>
+            <option value="${teamA}">${teamA}</option>
+            <option value="${teamB}">${teamB}</option>
+          </select>
+        </div>
+      `;
+    });
+
+    html += `</div></div>`;
+
+    container.innerHTML = html;
+
+    loadUserR32Selections();
+    setupUserR32Listeners();
+    renderNextRoundsUser();
+    if (knockoutLocked) disableKnockoutInputs();
+  });
+}
+
+function setupUserR32Listeners() {
+
+  const uid = localStorage.getItem("uid");
+  if (!uid) return;
+
+  document.querySelectorAll("[id^='user_r32_']").forEach(select => {
+
+    select.addEventListener("change", () => {
+
+      const matchNo = select.id.split("_")[2];
+      const value = select.value;
+
+      if (!value) return;
+
+      database.ref(`userBracket/${uid}/r32/${matchNo}`).set(value);
+    });
+
+  });
+}
+
+function loadUserR32Selections() {
+
+  const uid = localStorage.getItem("uid");
+  if (!uid) return;
+
+  database.ref(`userBracket/${uid}/r32`).once("value")
+    .then(snap => {
+
+      if (!snap.exists()) return;
+
+      const data = snap.val();
+
+      Object.keys(data).forEach(matchNo => {
+
+        const select = document.getElementById(`user_r32_${matchNo}`);
+        if (select) select.value = data[matchNo];
+
+      });
+
+    });
+}
+
+function renderNextRoundsUser() {
+
+  const uid = localStorage.getItem("uid");
+  if (!uid) return;
+
+  const container = document.getElementById("knockoutContainer");
+
+  // ================= R32 → R16 =================
+  database.ref(`userBracket/${uid}/r32`).on("value", snap => {
+
+    const r32 = snap.val() || {};
+
+    let r16Map = {
+      89: [73, 75],
+      90: [74, 77],
+      91: [76, 78],
+      92: [79, 80],
+      93: [83, 84],
+      94: [81, 82],
+      95: [86, 88],
+      96: [85, 87]
+    };
+
+    let r16HTML = `
+      <div style="margin-top:30px;">
+        <h3>Round of 16</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:15px;">
+    `;
+
+    Object.keys(r16Map).forEach(matchNo => {
+
+      const [a, b] = r16Map[matchNo];
+      const teamA = r32[a];
+      const teamB = r32[b];
+
+      if (teamA && teamB) {
+        r16HTML += `
+          <div class="admin-box">
+            <strong>Match ${matchNo}</strong><br><br>
+            ${teamA} vs ${teamB}<br><br>
+
+            <select class="knockout-select" id="user_r16_${matchNo}">
+              <option value="">Select Winner</option>
+              <option value="${teamA}">${teamA}</option>
+              <option value="${teamB}">${teamB}</option>
+            </select>
+          </div>
+        `;
+      }
+
+    });
+
+    r16HTML += `</div></div>`;
+
+    setSection("r16Section", r16HTML, container);
+
+if (knockoutLocked) disableKnockoutInputs();
+
+    setupNextRoundSave("r16");
+    loadNextRoundSelections("r16");
+
+    renderQF();
+  });
+
+  // ================= R16 → QF =================
+  function renderQF() {
+
+    database.ref(`userBracket/${uid}/r16`).on("value", snap => {
+
+      const r16 = snap.val() || {};
+
+      let qfMap = {
+        97: [89, 90],
+        98: [93, 94],
+        99: [91, 92],
+        100: [95, 96]
+      };
+
+      let html = `
+        <div style="margin-top:30px;">
+          <h3>Quarter Finals</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:15px;">
+      `;
+
+      Object.keys(qfMap).forEach(matchNo => {
+
+        const [a, b] = qfMap[matchNo];
+        const teamA = r16[a];
+        const teamB = r16[b];
+
+        if (teamA && teamB) {
+          html += `
+            <div class="admin-box">
+              <strong>Match ${matchNo}</strong><br><br>
+              ${teamA} vs ${teamB}<br><br>
+
+              <select class="knockout-select" id="user_qf_${matchNo}">
+                <option value="">Select Winner</option>
+                <option value="${teamA}">${teamA}</option>
+                <option value="${teamB}">${teamB}</option>
+              </select>
+            </div>
+          `;
+        }
+
+      });
+
+      html += `</div></div>`;
+
+      setSection("qfSection", html, container);
+
+if (knockoutLocked) disableKnockoutInputs();
+
+      setupNextRoundSave("qf");
+      loadNextRoundSelections("qf");
+
+      renderSF();
+    });
+  }
+
+  // ================= QF → SF =================
+  function renderSF() {
+
+    database.ref(`userBracket/${uid}/qf`).on("value", snap => {
+
+      const qf = snap.val() || {};
+
+      let sfMap = {
+        101: [97, 98],
+        102: [99, 100]
+      };
+
+      let html = `
+        <div style="margin-top:30px;">
+          <h3>Semi Finals</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:15px;">
+      `;
+
+      Object.keys(sfMap).forEach(matchNo => {
+
+        const [a, b] = sfMap[matchNo];
+        const teamA = qf[a];
+        const teamB = qf[b];
+
+        if (teamA && teamB) {
+          html += `
+            <div class="admin-box">
+              <strong>Match ${matchNo}</strong><br><br>
+              ${teamA} vs ${teamB}<br><br>
+
+              <select class="knockout-select" id="user_sf_${matchNo}">
+                <option value="">Select Winner</option>
+                <option value="${teamA}">${teamA}</option>
+                <option value="${teamB}">${teamB}</option>
+              </select>
+            </div>
+          `;
+        }
+
+      });
+
+      html += `</div></div>`;
+
+      setSection("sfSection", html, container);
+
+if (knockoutLocked) disableKnockoutInputs();
+
+      setupNextRoundSave("sf");
+      loadNextRoundSelections("sf");
+
+      renderFinalAndThird();
+    });
+  }
+
+  // ================= SF → FINAL + 3RD =================
+  function renderFinalAndThird() {
+
+  database.ref(`userBracket/${uid}/sf`).on("value", snap => {
+
+    const sf = snap.val() || {};
+
+    if (!sf[101] || !sf[102]) return;
+
+    database.ref(`userBracket/${uid}/qf`).once("value").then(qfSnap => {
+
+      const qf = qfSnap.val() || {};
+
+      const finalA = sf[101];
+      const finalB = sf[102];
+
+      const loser101 = getLoser(101, sf, qf);
+      const loser102 = getLoser(102, sf, qf);
+
+      if (!loser101 || !loser102) return;
+
+      let html = `
+        <div style="margin-top:30px;">
+
+          <h3>3rd Place (Match 103)</h3>
+          ${loser101} vs ${loser102}<br><br>
+          <select class="knockout-select" id="user_final_103">
+            <option value="">Select Winner</option>
+            <option value="${loser101}">${loser101}</option>
+            <option value="${loser102}">${loser102}</option>
+          </select>
+
+          <br><br>
+
+          <h3>Final (Match 104)</h3>
+          ${finalA} vs ${finalB}<br><br>
+          <select class="knockout-select" id="user_final_104">
+            <option value="">Select Winner</option>
+            <option value="${finalA}">${finalA}</option>
+            <option value="${finalB}">${finalB}</option>
+          </select>
+
+        </div>
+      `;
+
+      setSection("finalSection", html, container);
+
+if (knockoutLocked) disableKnockoutInputs();
+
+      setupNextRoundSave("final");
+      loadNextRoundSelections("final");
+
+    });
+  });
+}
+
+  // ================= HELPERS =================
+  function getLoser(matchNo, sfWinners, qfData) {
+
+  const mapping = {
+    101: [97, 98],
+    102: [99, 100]
+  };
+
+  const [a, b] = mapping[matchNo];
+
+  const teamA = qfData[a];
+  const teamB = qfData[b];
+
+  const winner = sfWinners[matchNo];
+
+  if (!teamA || !teamB || !winner) return "";
+
+  return winner === teamA ? teamB : teamA;
+}
+
+  function setSection(id, html, parent) {
+    let section = document.getElementById(id);
+
+    if (!section) {
+      section = document.createElement("div");
+      section.id = id;
+      parent.appendChild(section);
+    }
+
+    section.innerHTML = html;
+  }
+}
+
+function setupNextRoundSave(round) {
+
+  const uid = localStorage.getItem("uid");
+  if (!uid) return;
+
+  document.querySelectorAll(`[id^='user_${round}_']`).forEach(select => {
+
+    select.addEventListener("change", () => {
+
+      const matchNo = select.id.split("_")[2];
+      const value = select.value;
+
+      if (!value) return;
+
+      database.ref(`userBracket/${uid}/${round}/${matchNo}`).set(value);
+    });
+
+  });
+
+}
+
+function loadNextRoundSelections(round) {
+
+  const uid = localStorage.getItem("uid");
+  if (!uid) return;
+
+  database.ref(`userBracket/${uid}/${round}`).once("value")
+    .then(snap => {
+
+      if (!snap.exists()) return;
+
+      const data = snap.val();
+
+      Object.keys(data).forEach(matchNo => {
+
+        const select = document.getElementById(`user_${round}_${matchNo}`);
+        if (select) select.value = data[matchNo];
+
+      });
+
+    });
+
+}
+
+function renderR16User(uid) {
+
+  const container = document.getElementById("r16Container");
+  const message = document.getElementById("r16Message");
+
+  if (!container || !message) return;
+
+  database.ref("bracket/r32Winners/" + uid)
+    .on("value", snap => {
+
+      const winners = snap.val() || {};
+
+      if (Object.keys(winners).length < 16) {
+        container.innerHTML = "";
+        message.innerText = "Complete all R32 selections";
+        return;
+      }
+
+      message.innerText = "";
+
+      const mapping = [
+        { no: 89, a: 73, b: 75 },
+        { no: 90, a: 74, b: 77 },
+        { no: 91, a: 76, b: 78 },
+        { no: 92, a: 79, b: 80 },
+        { no: 93, a: 83, b: 84 },
+        { no: 94, a: 81, b: 82 },
+        { no: 95, a: 86, b: 88 },
+        { no: 96, a: 85, b: 87 }
+      ];
+
+      let html = `<div class="grid">`;
+
+      mapping.forEach(match => {
+
+        const teamA = winners[match.a];
+        const teamB = winners[match.b];
+
+        html += `
+          <div class="match-card">
+            <strong>Match ${match.no}</strong><br><br>
+
+            ${teamA} vs ${teamB}
+
+            <br><br>
+
+            <select onchange="saveR16Winner('${uid}', '${match.no}', this.value)">
+              <option value="">Select Winner</option>
+              <option value="${teamA}">${teamA}</option>
+              <option value="${teamB}">${teamB}</option>
+            </select>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+
+      loadSavedR16User(uid);
+    });
+}
+
+function saveR16Winner(uid, matchNo, winner) {
+  if (!winner) return;
+
+  database.ref(`bracket/r16Winners/${uid}/${matchNo}`)
+    .set(winner);
+}
+
+function loadSavedR16User(uid) {
+
+  database.ref("bracket/r16Winners/" + uid)
+    .once("value")
+    .then(snap => {
+
+      if (!snap.exists()) return;
+
+      const data = snap.val();
+
+      Object.keys(data).forEach(matchNo => {
+
+        const select = document.querySelector(
+          `select[onchange="saveR16Winner('${uid}', '${matchNo}', this.value)"]`
+        );
+
+        if (select) {
+          select.value = data[matchNo];
+        }
+      });
+
+    });
+}
+
+function renderQFUser(uid) {
+
+  const container = document.getElementById("qfContainer");
+  const message = document.getElementById("qfMessage");
+
+  database.ref("bracket/r16Winners/" + uid)
+    .on("value", snap => {
+
+      const r16 = snap.val() || {};
+
+      const required = [89,90,91,92,93,94,95,96];
+
+      if (required.some(m => !r16[m])) {
+        container.innerHTML = "";
+        message.innerText = "Complete R16 first";
+        return;
+      }
+
+      const mapping = [
+        { no: 97, a: 89, b: 90 },
+        { no: 98, a: 93, b: 94 },
+        { no: 99, a: 91, b: 92 },
+        { no: 100, a: 95, b: 96 }
+      ];
+
+      let html = `<div class="grid">`;
+
+      mapping.forEach(match => {
+
+        const teamA = r16[match.a];
+        const teamB = r16[match.b];
+
+        html += `
+          <div class="match-card">
+            Match ${match.no}<br><br>
+            ${teamA} vs ${teamB}<br><br>
+
+            <select onchange="saveQFWinner('${uid}', '${match.no}', this.value)">
+              <option value="">Select Winner</option>
+              <option value="${teamA}">${teamA}</option>
+              <option value="${teamB}">${teamB}</option>
+            </select>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+
+      loadSavedQFUser(uid);
+    });
+}
+
+function saveQFWinner(uid, matchNo, winner) {
+  database.ref(`bracket/qfWinners/${uid}/${matchNo}`).set(winner);
+}
+
+function saveSFWinner(uid, matchNo, winner, teamA, teamB) {
+
+  const loser = winner === teamA ? teamB : teamA;
+
+  database.ref(`bracket/sfWinners/${uid}/${matchNo}`).set(winner);
+  database.ref(`bracket/sfLosers/${uid}/${matchNo}`).set(loser);
+}
+
+function renderFinalUser(uid) {
+
+  const container = document.getElementById("finalContainer");
+
+  database.ref("bracket/sfWinners/" + uid)
+    .once("value")
+    .then(snap => {
+
+      const sf = snap.val() || {};
+
+      if (!sf[101] || !sf[102]) {
+        container.innerHTML = "Complete Semi Finals first";
+        return;
+      }
+
+      database.ref("bracket/sfLosers/" + uid)
+        .once("value")
+        .then(loserSnap => {
+
+          const losers = loserSnap.val() || {};
+
+          const html = `
+            <div>
+
+              <h3>3rd Place</h3>
+              ${losers[101]} vs ${losers[102]}
+              <select onchange="saveFinal('${uid}', 103, this.value)">
+                <option value="">Select</option>
+                <option value="${losers[101]}">${losers[101]}</option>
+                <option value="${losers[102]}">${losers[102]}</option>
+              </select>
+
+              <h3>Final</h3>
+              ${sf[101]} vs ${sf[102]}
+              <select onchange="saveFinal('${uid}', 104, this.value)">
+                <option value="">Select</option>
+                <option value="${sf[101]}">${sf[101]}</option>
+                <option value="${sf[102]}">${sf[102]}</option>
+              </select>
+
+            </div>
+          `;
+
+          container.innerHTML = html;
+
+        });
+    });
+}
+
+function saveFinal(uid, matchNo, winner) {
+  database.ref(`bracket/finalWinners/${uid}/${matchNo}`).set(winner);
+}
+
+function listenKnockoutLockUser() {
+
+  database.ref("bracketResults/lock/knockout")
+    .on("value", snap => {
+
+      knockoutLocked = snap.val() === true;
+
+      if (knockoutLocked) {
+        disableKnockoutInputs();
+      } else {
+        enableKnockoutInputs();
+      }
+
+    });
+
+}
+
+function disableKnockoutInputs() {
+  setTimeout(() => {
+    document.querySelectorAll(".knockout-select").forEach(el => {
+      el.disabled = true;
+    });
+  }, 100);
+}
+
+function enableKnockoutInputs() {
+  setTimeout(() => {
+    document.querySelectorAll(".knockout-select").forEach(el => {
+      el.disabled = false;
+    });
+  }, 100);
+}
+
+window.viewPredictions = viewPredictions;
+window.savePrediction = savePrediction;
+window.closePredictionModal = closePredictionModal;
