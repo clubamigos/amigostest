@@ -998,3 +998,81 @@ h2 {
   font-weight: 500;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+select, input, button {
+  max-width: 100%;
+}
+
+.admin-box {
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+
+  .admin-box {
+    padding: 15px;
+  }
+
+  .admin-box select {
+    width: 100%;
+  }
+
+}
+
+#r32Container,
+#r16Container,
+#qfContainer,
+#sfContainer,
+#finalContainer {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+
+  .modal-content {
+    margin: 20% auto;
+    padding: 20px;
+    width: 95%;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .modal-content {
+    margin: 20% auto;
+    padding: 20px;
+    width: 95%;
+  }
+
+}
+
+.admin-box,
+.user-card,
+.match-card {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+select {
+  min-height: 42px;
+}
+
+select {
+  min-height: 42px;
+}
+
+.table-wrapper,
+#predictionTable {
+  width: 100%;
+  overflow-x: auto;
+}

@@ -341,7 +341,7 @@ function renderMatchCard(match, matchId, card, savedA, savedB, uid) {
 
     <div class="match-info">
       <p><b>DATE:</b> ${formatDate(match.date)}</p>
-      <p><b>GROUP:</b> ${match.group}</p>
+      <p><b>STAGE:</b> ${formatGroup(match.group)}</p>
       <p><b>${match.teamA} vs ${match.teamB}</b></p>
     </div>
 
@@ -1663,6 +1663,33 @@ function enableKnockoutInputs() {
       el.disabled = false;
     });
   }, 100);
+}
+
+function formatGroup(group) {
+
+  const map = {
+    A: "Group A",
+    B: "Group B",
+    C: "Group C",
+    D: "Group D",
+    E: "Group E",
+    F: "Group F",
+    G: "Group G",
+    H: "Group H",
+    I: "Group I",
+    J: "Group J",
+    K: "Group K",
+    L: "Group L",
+
+    R32: "Round of 32",
+    R16: "Round of 16",
+    QF: "Quarter Final",
+    SF: "Semi Final",
+    FINAL: "Final",
+    "3RD": "3rd Place Match"
+  };
+
+  return map[group] || group;
 }
 
 window.viewPredictions = viewPredictions;
