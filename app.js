@@ -71,16 +71,21 @@ function login() {
       snapshot.forEach((child) => {
         const user = child.val();
         if (user.password === password) {
-          userFound = {
-            uid: child.key,
-            username: user.username
-          };
-        }
+  userFound = {
+    uid: child.key,
+    username: user.username,
+    mustChangePassword: user.mustChangePassword || false
+  };
+}
       });
 
       if (userFound) {
         localStorage.setItem("uid", userFound.uid);
         localStorage.setItem("username", userFound.username);
+        if (userFound.mustChangePassword) {
+    showChangePasswordModal(userFound.uid);
+    return; // ⛔ STOP normal flow
+  }
         showUser(userFound.username);
       } else {
         alert("Invalid phone or password");
@@ -259,10 +264,10 @@ function loadMatchesForUsers() {
       });
     });
 
-    // 🔥 Sort DESCENDING (latest matchNo on top)
-    matchesArray.sort((a, b) => {
-      return Number(b.data.matchNo) - Number(a.data.matchNo);
-    });
+    // 🔥 Sort ASCENDING (match 1 → top)
+matchesArray.sort((a, b) => {
+  return Number(a.data.matchNo) - Number(b.data.matchNo);
+});
 
     // 🔥 Render sorted matches
     matchesArray.forEach(item => {
@@ -1690,6 +1695,38 @@ function formatGroup(group) {
   };
 
   return map[group] || group;
+}
+
+let currentUserIdForPasswordChange = null;
+
+function showChangePasswordModal(uid) {
+  currentUserIdForPasswordChange = uid;
+  document.getElementById("changePasswordModal").style.display = "block";
+}
+
+function submitNewPassword() {
+
+  const newPass = document.getElementById("newPassword").value.trim();
+
+  if (newPass.length < 4 || newPass.length > 6) {
+    alert("Password must be 4 to 6 characters");
+    return;
+  }
+
+  database.ref("users/" + currentUserIdForPasswordChange).update({
+    password: newPass,
+    mustChangePassword: false
+  }).then(() => {
+
+    alert("Password updated successfully");
+
+    document.getElementById("changePasswordModal").style.display = "none";
+
+    const username = localStorage.getItem("username");
+    showUser(username);
+
+  });
+
 }
 
 window.viewPredictions = viewPredictions;

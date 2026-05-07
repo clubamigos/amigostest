@@ -15,8 +15,18 @@
     <!-- NAVIGATION (ALWAYS FREE ACCESS) -->
     <nav id="mainNav" class="main-nav">
   <a href="javascript:void(0)" onclick="navigate('leaderboard')">Leaderboard</a>
-<a href="javascript:void(0)" onclick="navigate('match')">Match Prediction</a>
-<a href="javascript:void(0)" onclick="navigate('bracket')">Bracket Prediction</a>
+
+  <a href="javascript:void(0)" onclick="navigate('match')">
+    Match Prediction
+  </a>
+
+  <a href="javascript:void(0)" onclick="navigate('bracket')">
+    Bracket Prediction
+  </a>
+
+  <a href="javascript:void(0)" onclick="navigate('rules')">
+    Rules
+  </a>
 </nav>
 
     <div id="guestView" class="auth-area">
@@ -77,6 +87,73 @@
   </div>
 </section>
 
+<section id="rules" class="page-section hidden">
+  <div class="page-box rules-page">
+
+    <h2 class="page-title">📜 Tournament Rules</h2>
+
+    <div class="rules-content">
+
+      <h3>⚽ Match Prediction</h3>
+      <p>
+        Predict before matches are locked. All daily matches will be locked at <b>20:00 (8:00 PM)</b>.
+        Once locked, predictions cannot be edited.
+      </p>
+
+      <ul>
+        <li>Exact score = 5 PTS</li>
+        <li>One correct team score = 2 PTS</li>
+        <li>Wrong prediction = 0 PTS</li>
+      </ul>
+
+      <hr>
+
+      <h3>🏆 Group Stage</h3>
+      <p>
+        Group Winners, Runners-up and Best 3rd must be selected before the first match begins.
+        After the first match starts, group predictions will be locked.
+      </p>
+
+      <ul>
+        <li>Correct Winner = 3 PTS</li>
+        <li>Correct Runner-up = 3 PTS</li>
+        <li>Best 3rd = 3 PTS</li>
+      </ul>
+
+      <hr>
+
+      <h3>🔥 Knockout Stage</h3>
+      <p>
+        Knockout stage predictions must be completed before the first knockout match begins.
+        After that, all predictions will be locked.
+      </p>
+
+      <ul>
+        <li>R32 Winner = 5 PTS</li>
+        <li>R16 Winner = 7 PTS</li>
+        <li>Quarter Final = 10 PTS</li>
+        <li>Semi Final = 15 PTS</li>
+        <li>3rd Place Match = 10 PTS</li>
+        <li>Final Winner = 20 PTS</li>
+      </ul>
+
+      <hr>
+
+      <h3>📌 Important</h3>
+      <ul>
+        <li>Always complete predictions before lock time</li>
+        <li>Daily match lock time is 20:00 (8:00 PM)</li>
+        <li>Group stage locks before first match</li>
+        <li>Knockout stage locks before first knockout match</li>
+        <li>Admins can lock anytime</li>
+        <li>Leaderboard updates automatically</li>
+        <li>Save predictions before leaving page</li>
+      </ul>
+
+    </div>
+  </div>
+</section>
+
 <!-- LOGIN MODAL -->
 <div id="loginModal" class="modal">
   <div class="modal-content">
@@ -130,6 +207,21 @@
     </button>
 
   </div>
+</div>
+
+<div id="changePasswordModal" class="modal">
+
+  <div class="modal-content">
+    <h3>Change Password</h3>
+
+    <input type="password" id="newPassword" placeholder="New Password (4-6 chars)">
+
+    <button class="primary-btn" onclick="submitNewPassword()">
+      Save Password
+    </button>
+
+  </div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>

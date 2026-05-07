@@ -68,6 +68,7 @@ function createUser() {
         username: username,
         phone: phone,
         password: password,
+        mustChangePassword: true,   // ✅ ADD THIS
         createdAt: Date.now(),
         points: {
           match: 0,
@@ -123,9 +124,13 @@ function loadUsers() {
           <b>Total Points:</b> ${totalPoints}
         </div>
 
-        <button class="secondary-btn" onclick="deleteUser('${uid}')">
-          Delete
-        </button>
+        <button class="primary-btn" onclick="resetUserPassword('${uid}')">
+  Reset Password
+</button>
+
+<button class="secondary-btn" onclick="deleteUser('${uid}')">
+  Delete
+</button>
       `;
 
       container.appendChild(userCard);
@@ -1866,6 +1871,26 @@ function calculateKnockoutPoints(stage, matchNo, actualWinner, pointsPerCorrect)
 
     });
 
+  });
+
+}
+
+function resetUserPassword(uid) {
+
+  const newPass = prompt("Enter temporary password (4–6 characters)");
+
+  if (!newPass) return;
+
+  if (newPass.length < 4 || newPass.length > 6) {
+    alert("Password must be 4 to 6 characters");
+    return;
+  }
+
+  database.ref("users/" + uid).update({
+    password: newPass,
+    mustChangePassword: true
+  }).then(() => {
+    alert("Password reset successfully");
   });
 
 }

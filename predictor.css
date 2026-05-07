@@ -262,34 +262,6 @@ h2 {
   background: rgba(255,255,255,0.05);
 }
 
-/* ================= PAGE BOX STYLE ================= */
-
-.page-section {
-  display: none; /* hidden by default */
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 0 20px;
-}
-
-.page-section.active {
-  display: block;
-}
-
-.page-box {
-  background: #111827;
-  color: white;
-  padding: 30px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-}
-
-/* Page headings inside box */
-.page-box h2 {
-  color: white;
-  margin: 0;
-}
-
 .main-nav a {
   text-decoration: none;
   color: #e5e7eb;
@@ -304,19 +276,52 @@ h2 {
   background: rgba(255, 255, 255, 0.08);
 }
 
+/* ================= PAGE SECTION ================= */
+
 .page-section {
-  display: none;
   max-width: 1000px;
   margin: 30px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  padding: 0 20px;
 }
 
-/* THIS is the visible page */
+/* hidden pages */
+.page-section.hidden {
+  display: none;
+}
+
+/* visible page */
 .page-section:not(.hidden) {
   display: block;
+}
+
+/* ================= PAGE BOX ================= */
+
+.page-box {
+  background: white;
+  color: #111827;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+/* PAGE TITLES */
+
+.page-box h2 {
+  color: #111827;
+  margin-bottom: 25px;
+}
+
+/* ================= PAGE SECTION ================= */
+
+.page-section {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+/* hidden pages */
+.page-section.hidden {
+  display: none;
 }
 
 #welcomeText {
@@ -1075,4 +1080,128 @@ select {
 #predictionTable {
   width: 100%;
   overflow-x: auto;
+}
+
+/* ================= RULES PAGE ================= */
+
+#rules .page-box {
+  background: white;
+  color: #111827;
+  text-align: left;
+}
+
+.rules-box {
+  max-width: 850px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.rules-box h3 {
+  color: #2563eb;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+}
+
+.rules-box ul {
+  padding-left: 20px;
+}
+
+.rules-box li {
+  margin-bottom: 8px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.rules-box hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 20px 0;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #111827;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .rules-grid {
+    grid-template-columns: 1fr;
+  }
+
+ .rule-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+  .page-title {
+    font-size: 1.5rem;
+  }
+}
+
+.rules-box {
+  width: 100%;
+  padding: 0 10px;
+}
+
+
+.rules-page {
+  max-width: 900px;
+  margin: auto;
+}
+
+.rules-content {
+  text-align: left;
+  line-height: 1.8;
+  color: #111827;
+}
+
+.rules-content h3 {
+  margin-top: 25px;
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.rules-content p {
+  margin: 10px 0;
+  color: #374151;
+}
+
+.rules-content ul {
+  padding-left: 20px;
+}
+
+.rules-content li {
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.rules-content hr {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+
+  .rules-content {
+    font-size: 0.95rem;
+  }
+
+  .rules-page {
+    padding: 0 10px;
+  }
+
 }
