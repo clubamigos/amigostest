@@ -1,5 +1,4 @@
 const database = firebase.database();
-const ADMIN_PASSWORD = "123";
 
 const GROUPS = {
   A: ["Mexico", "South Africa", "South Korea", "Czech Republic"],
@@ -189,12 +188,25 @@ function verifyAdmin() {
 
   const pass = document.getElementById("adminPassword").value.trim();
 
-  if (pass === ADMIN_PASSWORD) {
-    sessionStorage.setItem("isAdmin", "true");
-    window.location.href = "admin.html";
-  } else {
-    alert("Access denied");
-  }
+  database.ref("adminSettings/adminPassword")
+    .once("value")
+    .then((snapshot) => {
+
+      const realPassword = snapshot.val();
+
+      if (pass === realPassword) {
+
+        sessionStorage.setItem("isAdmin", "true");
+        window.location.href = "admin.html";
+
+      } else {
+
+        alert("Access denied");
+
+      }
+
+    });
+
 }
 
 /* ================= LEADERBOARD ================= */
